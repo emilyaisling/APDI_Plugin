@@ -35,4 +35,6 @@ private:
     LPF lowPass;
     HPF highPass;
     MyVoice voice1, voice2, voice3;
+    MyVoice voices[3];
+    float voiceGains[3] = {1, 0.5, 0.3333};
 };

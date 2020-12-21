@@ -49,7 +49,7 @@ extern "C" {
 MyEffect::MyEffect(const Parameters& parameters, const Presets& presets)
 : Effect(parameters, presets)
 {
-    // Initialise member variables, etc.
+    
 }
 
 // Destructor: called when the effect is terminated / unloaded
@@ -84,8 +84,6 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
     const float *pfInBuffer0 = inputBuffers[0], *pfInBuffer1 = inputBuffers[1];
     float *pfOutBuffer0 = outputBuffers[0], *pfOutBuffer1 = outputBuffers[1];
     
-    
-
     // Slider values
     float fRate = (parameters[0] * parameters[0] * parameters[0] * 0.09) + 0.01;
     float fDepth = (parameters[1] * parameters[1] * parameters[1] * 0.03)  + 0.02;
@@ -93,11 +91,6 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
     int iVoiceNum = parameters[3] * 2 + 1;
     
     // Delay values
-    float fDelSig = 0;
-    float fVoiceGain = 1;
-   
-    printf("Voice gain is: %f\n", fVoiceGain);
-    
     
     while(numSamples--)
     {
@@ -108,35 +101,19 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
         // Add your effect processing here
         fMix = (fIn0 + fIn1) * 0.5f;
 
-        voice1.voiceInit(fRate, fDepth, 0);
-        if (iVoiceNum == 2)
+        float fDelSig = 0;
+        for (int i = 0; i < iVoiceNum; i++)
         {
-            voice2.voiceInit(fRate, fDepth, 1);
+            voices[i].voiceInit(fRate, fDepth, i);
+            fDelSig += voices[i].process() * voiceGains[i];
         }
-        if (iVoiceNum == 3)
-        {
-            voice2.voiceInit(fRate, fDepth, 1);
-            voice3.voiceInit(fRate, fDepth, 2);
-        }
-        
-        fDelSig = voice1.process() * fVoiceGain;
-        
-        if (iVoiceNum == 2)
-        {
-            fDelSig += voice2.process() * fVoiceGain;
-        }
-        if (iVoiceNum == 3)
-        {
-            fDelSig += voice2.process() * fVoiceGain;
-            fDelSig += voice3.process() * fVoiceGain;
-        }
-        
         
         fOut0 = fMix + (fDelSig * fFBGain);
         
-        voice1.voiceFB(fOut0);
-        voice2.voiceFB(fOut0);
-        voice3.voiceFB(fOut0);
+        for (int j = 0; j < iVoiceNum; j++)
+        {
+            voices[j].voiceFB(fOut0);
+        }
         
         // Copy result to output
         *pfOutBuffer0++ = fOut0;
