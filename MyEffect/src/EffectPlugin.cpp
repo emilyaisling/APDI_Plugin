@@ -84,17 +84,21 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
     const float *pfInBuffer0 = inputBuffers[0], *pfInBuffer1 = inputBuffers[1];
     float *pfOutBuffer0 = outputBuffers[0], *pfOutBuffer1 = outputBuffers[1];
     
+    
+
     // Slider values
     float fRate = (parameters[0] * parameters[0] * parameters[0] * 0.09) + 0.01;
     float fDepth = (parameters[1] * parameters[1] * parameters[1] * 0.03)  + 0.02;
     float fFBGain = parameters[2] * 0.5;
     int iVoiceNum = parameters[3] * 2 + 1;
-    printf("voices: %d\n", iVoiceNum);
     
     // Delay values
     float fDelSig = 0;
-    float fVoiceGain = 1 / (float)iVoiceNum;
-
+    float fVoiceGain = 1;
+   
+    printf("Voice gain is: %f\n", fVoiceGain);
+    
+    
     while(numSamples--)
     {
         // Get sample from input
@@ -109,13 +113,22 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
         {
             voice2.voiceInit(fRate, fDepth, 1);
         }
+        if (iVoiceNum == 3)
+        {
+            voice2.voiceInit(fRate, fDepth, 1);
+            voice3.voiceInit(fRate, fDepth, 2);
+        }
         
-
         fDelSig = voice1.process() * fVoiceGain;
         
         if (iVoiceNum == 2)
         {
             fDelSig += voice2.process() * fVoiceGain;
+        }
+        if (iVoiceNum == 3)
+        {
+            fDelSig += voice2.process() * fVoiceGain;
+            fDelSig += voice3.process() * fVoiceGain;
         }
         
         
@@ -123,6 +136,7 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
         
         voice1.voiceFB(fOut0);
         voice2.voiceFB(fOut0);
+        voice3.voiceFB(fOut0);
         
         // Copy result to output
         *pfOutBuffer0++ = fOut0;

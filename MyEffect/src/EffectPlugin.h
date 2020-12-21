@@ -34,5 +34,5 @@ private:
     MyDelay delay;
     LPF lowPass;
     HPF highPass;
-    MyVoice voice1, voice2;
+    MyVoice voice1, voice2, voice3;
 };
