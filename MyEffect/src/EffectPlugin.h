@@ -30,6 +30,9 @@ public:
 
 private:
     // Declare shared member variables here
-    Osc osc;
+    MyOscillator osc;
     MyDelay delay;
+    LPF lowPass;
+    HPF highPass;
+    MyVoice voice1, voice2;
 };

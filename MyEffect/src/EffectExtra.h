@@ -29,10 +29,10 @@ private:
     float previous = 0;
 };
 
-class Osc
+class MyOscillator
 {
 public:
-    Osc()
+    MyOscillator()
     {
         fPhasePos = 0;
     }
@@ -96,6 +96,7 @@ public:
         
         return fBufferReadPos;
     }
+    
     float InterpolatedRead(float fBufferReadPos)
     {
         int iPos1, iPos2;
@@ -149,5 +150,39 @@ private:
     float *pfCircularBuffer;
     int iBufferSize, iBufferWritePos;
     MyFilter delayTimeFilter;
+};
+
+class MyVoice
+{
+public:
+    MyVoice()
+    {
+        fVoiceGain = 0;
+        fDelTime = 0;
+        fDelSig = 0;
+    }
+
+    void voiceInit(float fRate, float fDepth, int i)
+    {
+        fRate += ((i + 1) * 0.0005);
+        fDepth += ((i + 1) * 0.0005);
+        fDelTime = voiceOsc.generate(fRate, fDepth);
+    }
+
+    float process()
+    {
+        fDelSig = voiceDelay.processFeedback(fDelTime, 1);
+        return fDelSig;
+    }
+
+    void voiceFB(float fOut)
+    {
+        voiceDelay.feedback(fOut);
+    }
+
+private:
+    float fVoiceGain, fDelTime, fDelSig;
+    MyOscillator voiceOsc;
+    MyDelay voiceDelay;
 };
 

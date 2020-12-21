@@ -31,7 +31,9 @@ extern "C" {
             //  name,       type,              min, max, initial, size
             {   "Rate",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
             {   "Depth",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
-            {   "Feedback",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  }
+            {   "Feedback",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
+            {   "LPF Cutoff",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
+            {   "Voices",  Parameter::MENU, {"1", "2"}, AUTO_SIZE  }
         };
 
         const Presets PRESETS = {
@@ -75,12 +77,6 @@ void MyEffect::buttonPressed(int iButton)
     // A button, with index iButton, has been pressed
 }
 
-float gainFunc(float parameter)
-{
-    // gain function
-    return parameter;
-}
-
 // Applies audio processing to a buffer of audio
 // (inputBuffer contains the input audio, and processed samples should be stored in outputBuffer)
 void MyEffect::process(const float** inputBuffers, float** outputBuffers, int numSamples)
@@ -89,20 +85,16 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
     const float *pfInBuffer0 = inputBuffers[0], *pfInBuffer1 = inputBuffers[1];
     float *pfOutBuffer0 = outputBuffers[0], *pfOutBuffer1 = outputBuffers[1];
     
-<<<<<<< HEAD
-    float fRate = parameters[0] * 0.09 + 0.01;
-    float fDepth = parameters[1] * 0.025  + 0.025;
+    // Slider values
+    float fRate = (parameters[0] * parameters[0] * parameters[0] * 0.09) + 0.01;
+    float fDepth = (parameters[1] * parameters[1] * parameters[1] * 0.03)  + 0.02;
+    float fFBGain = parameters[2] * 0.5;
+    int iVoiceNum = parameters[3] + 1;
     
-    float fFBGain = parameters[2] * 0.95;
-    fFBGain = 0.7 * fFBGain;
-    
-    float fDelGain = 0.2;
-    float fDelTime = 0;
+    // Delay values
     float fDelSig = 0;
-=======
-    float fGain = gainFunc(parameters[0]);
->>>>>>> d2b601963004ee0ff98fb0e6da3bdd85a78d89af
-    
+    float fVoiceGain = 0.5;
+
     while(numSamples--)
     {
         // Get sample from input
@@ -110,16 +102,18 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
         fIn1 = *pfInBuffer1++;
         
         // Add your effect processing here
-        fDelTime = osc.generate(fRate, fDepth);
-        
         fMix = (fIn0 + fIn1) * 0.5f;
+
+        voice1.voiceInit(fRate, fDepth, 0);
+        voice2.voiceInit(fRate, fDepth, 0);
+
+        fDelSig += voice1.process() * fVoiceGain;
+        fDelSig += voice2.process() * fVoiceGain;
         
-        fDelSig = delay.processFeedback(fDelTime + 0.0005, fFBGain);
+        fOut0 = fMix + (fDelSig * fFBGain);
         
-        fOut0 = fMix + fDelSig;
-        fOut1 = fMix + fDelSig;
-        
-        delay.feedback(fOut0);
+        voice1.voiceFB(fOut0);
+        voice2.voiceFB(fOut0);
         
         // Copy result to output
         *pfOutBuffer0++ = fOut0;
