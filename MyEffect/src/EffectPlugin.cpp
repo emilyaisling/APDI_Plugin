@@ -33,7 +33,8 @@ extern "C" {
             {   "Depth",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
             {   "Voices",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
             {   "Dry/Wet",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
-            {   "Gain",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  }
+            {   "Gain",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
+            {   "Stereo",  Parameter::TOGGLE, 0.0, 1.0, 0.0, AUTO_SIZE  }
         };
 
         const Presets PRESETS = {
@@ -91,11 +92,7 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
     int iVoiceNum = parameters[2] * 3 + 1;
     float fDWGain = parameters[3] * 0.5;
     float fOutGain = parameters[4];
-    // printf("Voice num: %d\n", iVoiceNum);
-    
-    // Delay values
-    
-    
+    float fStereoToggle = parameters[5];
 
     while(numSamples--)
     {
@@ -110,25 +107,62 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
         // Add your effect processing here
         fMix = (fIn0 + fIn1) * 0.5f;
 
-        float fDelSig = 0;
+        float fDelSig0 = 0;
+        float fDelSig1 = 0;
         for (int i = 0; i < iVoiceNum; i++)
         {
             voices[i].voiceInit(fRate, fDepth, i);
-            fDelSig += voices[i].process() * voiceGains[i];
+            
+            if (fStereoToggle)
+            {
+                if (i % 2 == 0)
+                {
+                    fDelSig0 += voices[i].process() * voiceGains[i];
+                }
+                else
+                {
+                    fDelSig1 += voices[i].process() * voiceGains[i];
+                }
+            }
+            else
+            {
+                fDelSig0 += voices[i].process() * voiceGains[i];
+            }
         }
         
-        fOut0 = fMix + (fDelSig * fDWGain);
+        if (fStereoToggle)
+        {
+            fOut0 = fIn0 + (fDelSig0 * fDWGain);
+            fOut1 = fIn1 + (fDelSig1 * fDWGain);
+        }
+        else
+        {
+            fOut0 = fIn0 + (fDelSig0 * fDWGain);
+            fOut1 = fIn1 + (fDelSig0 * fDWGain);
+        }
 
         for (int j = 0; j < iVoiceNum; j++)
         {
-            voices[j].voiceFB(fOut0);
+            if (fStereoToggle)
+            {
+                if (j % 2 == 0)
+                {
+                    voices[j].voiceFB(fOut0);
+                }
+                else
+                {
+                    voices[j].voiceFB(fOut1);
+                }
+            }
+            else
+            {
+                voices[j].voiceFB((fOut0 + fOut1) * 0.5);
+            }
         }
-        
-        fOut0 -= fMix;
      
 
         // Copy result to output
         *pfOutBuffer0++ = fOut0 * fOutGain; 
-        *pfOutBuffer1++ = fOut0 * fOutGain;
+        *pfOutBuffer1++ = fOut1 * fOutGain;
     }
 }
