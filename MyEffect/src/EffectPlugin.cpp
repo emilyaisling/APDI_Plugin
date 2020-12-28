@@ -32,7 +32,8 @@ extern "C" {
             {   "Rate",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
             {   "Depth",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
             {   "Feedback",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
-            {   "Voices",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  }
+            {   "Voices",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
+            {   "Output Gain",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  }
         };
 
         const Presets PRESETS = {
@@ -88,7 +89,9 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
     float fRate = (parameters[0] * parameters[0] * parameters[0] * 0.09) + 0.01;
     float fDepth = (parameters[1] * parameters[1] * parameters[1] * 0.03)  + 0.02;
     float fFBGain = parameters[2] * 0.5;
-    int iVoiceNum = parameters[3] * 2 + 1;
+    int iVoiceNum = parameters[3] * 7 + 1;
+    float fOutGain = parameters[4];
+    printf("Voice num: %d\n", iVoiceNum);
     
     // Delay values
     
@@ -99,13 +102,16 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
         fIn1 = *pfInBuffer1++;
         
         // Add your effect processing here
-        fMix = (fIn0 + fIn1) * 0.5f;
+        fMix = (fIn0 + fIn1) * 0.25f;
 
         float fDelSig = 0;
-        for (int i = 0; i < iVoiceNum; i++)
+        if (iVoiceNum > 1)
         {
-            voices[i].voiceInit(fRate, fDepth, i);
-            fDelSig += voices[i].process() * voiceGains[i];
+            for (int i = 0; i < iVoiceNum; i++)
+            {
+                voices[i].voiceInit(fRate, fDepth, i);
+                fDelSig += voices[i].process() * voiceGains[i];
+            }
         }
         
         fOut0 = fMix + (fDelSig * fFBGain);
@@ -116,7 +122,7 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
         }
         
         // Copy result to output
-        *pfOutBuffer0++ = fOut0;
+        *pfOutBuffer0++ = fOut0; 
         *pfOutBuffer1++ = fOut0;
     }
 }
