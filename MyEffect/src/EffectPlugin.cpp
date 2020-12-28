@@ -32,8 +32,7 @@ extern "C" {
             {   "Rate",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
             {   "Depth",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
             {   "Feedback",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
-            {   "Voices",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
-            {   "Output Gain",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  }
+            {   "Voices",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  }
         };
 
         const Presets PRESETS = {
@@ -90,7 +89,6 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
     float fDepth = (parameters[1] * parameters[1] * parameters[1] * 0.03)  + 0.02;
     float fFBGain = parameters[2] * 0.5;
     int iVoiceNum = parameters[3] * 7 + 1;
-    float fOutGain = parameters[4];
     printf("Voice num: %d\n", iVoiceNum);
     
     // Delay values
@@ -105,13 +103,10 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
         fMix = (fIn0 + fIn1) * 0.25f;
 
         float fDelSig = 0;
-        if (iVoiceNum > 1)
+        for (int i = 0; i < iVoiceNum; i++)
         {
-            for (int i = 0; i < iVoiceNum; i++)
-            {
-                voices[i].voiceInit(fRate, fDepth, i);
-                fDelSig += voices[i].process() * voiceGains[i];
-            }
+            voices[i].voiceInit(fRate, fDepth, i);
+            fDelSig += voices[i].process() * voiceGains[i];
         }
         
         fOut0 = fMix + (fDelSig * fFBGain);

@@ -164,8 +164,8 @@ public:
 
     void voiceInit(float fRate, float fDepth, int i)
     {
-        fRate += ((i + 1) * 0.001);
-        fDepth += ((i + 1) * 0.001);
+        fRate += ((i + 1) * 0.01);
+        fDepth += ((i + 1) * 0.01);
         fDelTime = voiceOsc.generate(fRate, fDepth);
     }
 
