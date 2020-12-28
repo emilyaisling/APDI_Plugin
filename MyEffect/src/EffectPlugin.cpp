@@ -31,8 +31,9 @@ extern "C" {
             //  name,       type,              min, max, initial, size
             {   "Rate",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
             {   "Depth",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
-            {   "Feedback",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
-            {   "Voices",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  }
+            {   "Voices",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
+            {   "Dry/Wet",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
+            {   "Gain",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  }
         };
 
         const Presets PRESETS = {
@@ -87,20 +88,27 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
     // Slider values
     float fRate = (parameters[0] * parameters[0] * parameters[0] * 0.09) + 0.01;
     float fDepth = (parameters[1] * parameters[1] * parameters[1] * 0.03)  + 0.02;
-    float fFBGain = parameters[2] * 0.5;
-    int iVoiceNum = parameters[3] * 7 + 1;
-    printf("Voice num: %d\n", iVoiceNum);
+    int iVoiceNum = parameters[2] * 3 + 1;
+    float fDWGain = parameters[3] * 0.5;
+    float fOutGain = parameters[4];
+    // printf("Voice num: %d\n", iVoiceNum);
     
     // Delay values
     
+    
+
     while(numSamples--)
     {
+        if (numSamples == 1)
+        {
+            printf("fOut: %f\n", fOut0);
+        }
         // Get sample from input
         fIn0 = *pfInBuffer0++;
         fIn1 = *pfInBuffer1++;
         
         // Add your effect processing here
-        fMix = (fIn0 + fIn1) * 0.25f;
+        fMix = (fIn0 + fIn1) * 0.5f;
 
         float fDelSig = 0;
         for (int i = 0; i < iVoiceNum; i++)
@@ -109,15 +117,18 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
             fDelSig += voices[i].process() * voiceGains[i];
         }
         
-        fOut0 = fMix + (fDelSig * fFBGain);
-        
+        fOut0 = fMix + (fDelSig * fDWGain);
+
         for (int j = 0; j < iVoiceNum; j++)
         {
             voices[j].voiceFB(fOut0);
         }
         
+        fOut0 -= fMix;
+     
+
         // Copy result to output
-        *pfOutBuffer0++ = fOut0; 
-        *pfOutBuffer1++ = fOut0;
+        *pfOutBuffer0++ = fOut0 * fOutGain; 
+        *pfOutBuffer1++ = fOut0 * fOutGain;
     }
 }

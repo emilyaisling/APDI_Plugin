@@ -34,6 +34,6 @@ private:
     MyDelay delay;
     LPF lowPass;
     HPF highPass;
-    MyVoice voices[8];
-    float voiceGains[8] = {0.5, 0.25, 0.125, 0.0625, 0.015625, 0.015625, 0.015625, 0.015625};
+    MyVoice voices[4];
+    float voiceGains[4] = {0.5, 0.25, 0.125, 0.0625};
 };
