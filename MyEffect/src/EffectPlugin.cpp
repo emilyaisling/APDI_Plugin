@@ -116,18 +116,12 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
             if (fStereoToggle)
             {
                 if (i % 2 == 0)
-                {
-                    fDelSig0 += voices[i].process() * voiceGains[i];
-                }
+                    fDelSig0 += voices[i].process() * stereoVoiceGains[i];
                 else
-                {
-                    fDelSig1 += voices[i].process() * voiceGains[i];
-                }
+                    fDelSig1 += voices[i].process() * stereoVoiceGains[i];
             }
             else
-            {
                 fDelSig0 += voices[i].process() * voiceGains[i];
-            }
         }
         
         if (fStereoToggle)
@@ -146,21 +140,14 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
             if (fStereoToggle)
             {
                 if (j % 2 == 0)
-                {
                     voices[j].voiceFB(fOut0);
-                }
                 else
-                {
                     voices[j].voiceFB(fOut1);
-                }
             }
             else
-            {
                 voices[j].voiceFB((fOut0 + fOut1) * 0.5);
-            }
         }
      
-
         // Copy result to output
         *pfOutBuffer0++ = fOut0 * fOutGain; 
         *pfOutBuffer1++ = fOut1 * fOutGain;
