@@ -30,11 +30,11 @@ extern "C" {
         const Parameters CONTROLS = {
             //  name,       type,              min, max, initial, size
             {   "Rate",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
-            {   "Depth",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
-            {   "Voices",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
+            {   "Intensity",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
+            {   "Stereo",  Parameter::TOGGLE, 0.0, 1.0, 0.0, Parameter::Bounds(175, 18, 50, 40)  },
             {   "Dry/Wet",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
-            {   "Gain",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
-            {   "Stereo",  Parameter::TOGGLE, 0.0, 1.0, 0.0, AUTO_SIZE  }
+            {   "Output Gain",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
+            {   "Voices",  Parameter::MENU, {"One", "Two", "Three", "Four"}, {170, 90, 60, 20}  }
         };
 
         const Presets PRESETS = {
@@ -89,10 +89,10 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
     // Slider values
     float fRate = (parameters[0] * parameters[0] * parameters[0] * 0.09) + 0.01;
     float fDepth = (parameters[1] * parameters[1] * parameters[1] * 0.03)  + 0.02;
-    int iVoiceNum = parameters[2] * 3 + 1;
+    float fStereoToggle = parameters[2];
     float fDWGain = parameters[3] * 0.5;
     float fOutGain = parameters[4];
-    float fStereoToggle = parameters[5];
+    int iVoiceNum = parameters[5] + 1;
 
     while(numSamples--)
     {
