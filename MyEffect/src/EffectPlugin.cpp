@@ -31,16 +31,16 @@ extern "C" {
             //  name,       type,              min, max, initial, size
             {   "Rate",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
             {   "Intensity",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
-            {   "Stereo",  Parameter::TOGGLE, 0.0, 1.0, 0.0, Parameter::Bounds(175, 18, 50, 40)  },
+            {   "Stereo",  Parameter::TOGGLE, 0.0, 1.0, 1.0, Parameter::Bounds(175, 18, 50, 40)  },
             {   "Dry/Wet",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
-            {   "Output Gain",  Parameter::ROTARY, 0.0, 1.0, 0.0, AUTO_SIZE  },
+            {   "Output Gain",  Parameter::ROTARY, 0.0, 1.0, 0.5, AUTO_SIZE  },
             {   "Voices",  Parameter::MENU, {"One", "Two", "Three", "Four"}, {170, 90, 60, 20}  }
         };
 
         const Presets PRESETS = {
-            { "Preset 1", { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
-            { "Preset 2", { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
-            { "Preset 3", { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
+            { "Standard Single Voice", { 0.5, 0.5, 1.0, 0.825, 0.5, 0, 0, 0, 0, 0 } },
+            { "Sweet Mono Multivoice", { 0.65, 0.75, 1.0, 0.8, 0.5, 2, 0, 0, 0, 0 } },
+            { "Intense Stereo Multivoice", { 0.71, 1.0, 0.0, 1.0, 0.5, 3, 0, 0, 0, 0 } }
         };
 
         return (APDI::Effect*)new MyEffect(CONTROLS, PRESETS);
@@ -96,10 +96,6 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
 
     while(numSamples--)
     {
-        if (numSamples == 1)
-        {
-            printf("fOut: %f\n", fOut0);
-        }
         // Get sample from input
         fIn0 = *pfInBuffer0++;
         fIn1 = *pfInBuffer1++;
@@ -109,27 +105,30 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
 
         float fDelSig0 = 0;
         float fDelSig1 = 0;
+        
         for (int i = 0; i < iVoiceNum; i++)
         {
             voices[i].voiceInit(fRate, fDepth, i);
             
-            if (fStereoToggle)
+            //distributes delayed signals between L and R if "stereo" button is pressed
+            if (!fStereoToggle)
             {
                 if (i % 2 == 0)
                     fDelSig0 += voices[i].process() * stereoVoiceGains[i];
                 else
                     fDelSig1 += voices[i].process() * stereoVoiceGains[i];
             }
-            else
+            else //default to mono
                 fDelSig0 += voices[i].process() * voiceGains[i];
         }
         
-        if (fStereoToggle)
+        //send stereo wet/dry mix to L and R outputs
+        if (!fStereoToggle)
         {
             fOut0 = fIn0 + (fDelSig0 * fDWGain);
             fOut1 = fIn1 + (fDelSig1 * fDWGain);
         }
-        else
+        else //send mono wet/dry mix to L and R outputs
         {
             fOut0 = fIn0 + (fDelSig0 * fDWGain);
             fOut1 = fIn1 + (fDelSig0 * fDWGain);
@@ -137,14 +136,15 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
 
         for (int j = 0; j < iVoiceNum; j++)
         {
-            if (fStereoToggle)
+            //separate feedback loops for L and R
+            if (!fStereoToggle)
             {
                 if (j % 2 == 0)
                     voices[j].voiceFB(fOut0);
                 else
                     voices[j].voiceFB(fOut1);
             }
-            else
+            else //single mono feedback loop
                 voices[j].voiceFB((fOut0 + fOut1) * 0.5);
         }
      

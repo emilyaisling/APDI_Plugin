@@ -41,12 +41,15 @@ public:
     {
         float fMod = 0;
         float fPhaseInc = (fTwoPI * fRate) / getSampleRate();
+        
+        //cycle thorugh triangle wave
         fPhasePos += fPhaseInc;
         if (fPhasePos > fTwoPI)
         {
             fPhasePos -= fTwoPI;
         }
         
+        //get triangle wave value based on fPhasePos
         if (fPhasePos < M_PI)
         {
             fMod = -1 + 2/M_PI * fPhasePos;
@@ -55,6 +58,7 @@ public:
         {
             fMod = 3 - 2/M_PI * fPhasePos;
         }
+        
         return fMod * fDepth + fDepth;
     }
     
@@ -85,6 +89,7 @@ public:
         delete [] pfCircularBuffer;
     }
     
+    //find delayed read position in buffer
     int TapPos(float fDelTime)
     {
         float fBufferReadPos = iBufferWritePos - (delayTimeFilter.process(fDelTime) * getSampleRate());
@@ -97,6 +102,7 @@ public:
         return fBufferReadPos;
     }
     
+    //smooth buffer values
     float InterpolatedRead(float fBufferReadPos)
     {
         int iPos1, iPos2;
@@ -114,6 +120,7 @@ public:
         return fResult;
     }
     
+    //returns delayed signal without feedback
     float processSimple(float fIn, float fDelTime, float fDelGain)
     {
         pfCircularBuffer[iBufferWritePos] = fIn;
@@ -126,6 +133,7 @@ public:
         return InterpolatedRead(TapPos(fDelTime)) * fDelGain;
     }
     
+    //returns delayed signal with feedback
     float processFeedback(float fFBDelTime, float fFBGain)
     {
         int iBufferReadPos;
@@ -141,6 +149,7 @@ public:
         return pfCircularBuffer[iBufferReadPos] * fFBGain;
     }
     
+    //creates feedback loop
     void feedback(float output)
     {
         pfCircularBuffer[iBufferWritePos] = output;
@@ -164,8 +173,10 @@ public:
 
     void voiceInit(float fRate, float fDepth, int i)
     {
+        //offset oscillator depending on voice number (i)
         fRate += ((i + 1) * 0.02);
         fDepth += ((i + 1) * 0.02);
+        
         fDelTime = voiceOsc.generate(fRate, fDepth);
     }
 
