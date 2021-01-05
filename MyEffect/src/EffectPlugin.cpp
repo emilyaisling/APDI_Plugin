@@ -82,7 +82,7 @@ void MyEffect::buttonPressed(int iButton)
 // (inputBuffer contains the input audio, and processed samples should be stored in outputBuffer)
 void MyEffect::process(const float** inputBuffers, float** outputBuffers, int numSamples)
 {
-    float fIn0, fIn1, fOut0 = 0, fOut1 = 0, fMix = 0;
+    float fIn0, fIn1, fOut0 = 0, fOut1 = 0;
     const float *pfInBuffer0 = inputBuffers[0], *pfInBuffer1 = inputBuffers[1];
     float *pfOutBuffer0 = outputBuffers[0], *pfOutBuffer1 = outputBuffers[1];
     
@@ -101,8 +101,6 @@ void MyEffect::process(const float** inputBuffers, float** outputBuffers, int nu
         fIn1 = *pfInBuffer1++;
         
         // Add your effect processing here
-        fMix = (fIn0 + fIn1) * 0.5f;
-
         float fDelSig0 = 0;
         float fDelSig1 = 0;
         
