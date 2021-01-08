@@ -30,10 +30,6 @@ public:
 
 private:
     // Declare shared member variables here
-    MyOscillator osc;
-    MyDelay delay;
-    LPF lowPass;
-    HPF highPass;
     MyVoice voices[4];
     float voiceGains[4] = {0.5, 0.25, 0.125, 0.0625};
     float stereoVoiceGains[4] = {0.3, 0.3, 0.15, 0.15};
